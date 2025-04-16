@@ -42,7 +42,7 @@ function Header({searchRecipes, isHome, handleNavigateHome, handleNavigateProfil
       {/* Logo */}
       <div className="logo-wrapper" onClick={() => handleNavigateHome()}>
         <img src={logo} alt="logo" className="logo-image" />
-        <span className="name">Recipe Book</span>
+        <span className="name">NamakShamak</span>
       </div>
       {/* Search Bar (only shown on home page) */}
       {isHome && <form className="input-wrapper" onSubmit={(e) => handleInput(e)}>
@@ -81,7 +81,7 @@ function Header({searchRecipes, isHome, handleNavigateHome, handleNavigateProfil
           <img
             className="user-image"
             src={`https://naaamak.onrender.com/assets/${user.picture}`}
-            alt="user"
+            alt="no image"
           />
           <span className="user-name">
             {user.firstName} {user.lastName}

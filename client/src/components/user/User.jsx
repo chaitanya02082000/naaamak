@@ -1,7 +1,6 @@
 import React from 'react';
 import "../user/User.scss";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+
 
 /**
  * Renders user details
@@ -11,32 +10,16 @@ import { faUser, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 
 const User = ({user}) => {
   return (
-    <div className='user-profile-container'>
-      <div className='user-profile-content'>
-        <div className='user-profile-image'>
-          <img 
-            src={`https://naaamak.onrender.com/assets/${user.picture}`} 
-            alt={user.picture} 
-            className='profile-image'
-          />
+    <div className='user-details-container'>
+        <div className='user-details-flex'>
+            <span className='user-name-style'>{user.firstName} {user.lastName}</span>
+            <span className='user-email-style'>{user.email}</span>
         </div>
-        
-        <div className='user-profile-info'>
-          <h1 className='user-name'>{user.firstName} {user.lastName}</h1>
-          <div className='user-details'>
-            <div className='user-detail-item'>
-              <FontAwesomeIcon icon={faEnvelope} className='detail-icon' />
-              <span>{user.email}</span>
-            </div>
-            <div className='user-detail-item'>
-              <FontAwesomeIcon icon={faUser} className='detail-icon' />
-              <span>Member since {new Date(user.createdAt).toLocaleDateString()}</span>
-            </div>
-          </div>
+        <div>
+            <img  src={`https://naaamak.onrender.com/assets/${user.picture}`} alt={user.picture} className='user-image-style' />
         </div>
-      </div>
     </div>
-  );
-};
+  )
+}
 
-export default User;
+export default User

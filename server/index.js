@@ -16,11 +16,24 @@ import { register } from "./controllers/auth.js"; // authentication controller f
 import User from "./models/User.js"; // user model
 import SavedRecipes from "./models/SavedRecipes.js"; // saved recipes model
 import { users,  savedRecipes} from "./data/index.js"; // sample data
+import recipeRoutes from "./routes/recipes.js"; // recipe routes
 
 //CONFIGURATIONS AND SETUP
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config(); // load environment variables from .env file
+
+// Validate required environment variables
+if (!process.env.MONGO_URL) {
+  console.error('MONGO_URL is not defined in .env file');
+  process.exit(1);
+}
+
+if (!process.env.GEMINI_API_KEY) {
+  console.error('GEMINI_API_KEY is not defined in .env file');
+  process.exit(1);
+}
+
 const app = express(); // create express app
 app.use(express.json()); // middleware for parsing JSON request bodies
 app.use(helmet()); // middleware for setting various security-related HTTP headers
@@ -53,19 +66,27 @@ app.get("/", (req, res) => {
 /* ROUTES */
 app.use("/auth", authRoutes); // use authentication routes
 app.use("/users", userRoutes); // use user routes
+app.use("/api/recipes", recipeRoutes); // use recipe routes with /api prefix
  
 //MONGOOSE SETUP
-const PORT = process.env.PORT || 6001; // set server port
+const PORT = process.env.PORT || 5000; // set server port to 5000
 
 const startServer = async () => {
   try {
-      connectDB(process.env.MONGO_URL, () => {
-      console.log("MongoDB connected, starting server...");
-      app.listen(PORT, () => console.log("Server started on port http://localhost:8080")
-      );
+    console.log('Attempting to connect to MongoDB...');
+    connectDB(process.env.MONGO_URL, () => {
+      console.log("MongoDB connected successfully");
+      app.listen(PORT, () => {
+        console.log(`Server started on port http://localhost:${PORT}`);
+        console.log('Available routes:');
+        console.log('- POST /api/recipes/scrape');
+        console.log('- POST /auth/register');
+        console.log('- GET /');
+      });
     });
   } catch (error) {
-      console.log(error);
+    console.error('Failed to start server:', error);
+    process.exit(1);
   }
 };
 startServer();

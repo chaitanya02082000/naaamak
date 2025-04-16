@@ -73,8 +73,14 @@ const HomePage = () => {
   
   // Function to get random recipes
   const getRandom = async () => {
-    const api = await axios.get(RANDOM_RECIPE_URL);
-    setRandomRecipes(api.data.recipes);
+    try {
+      const api = await axios.get(RANDOM_RECIPE_URL);
+      setRandomRecipes(api.data.recipes);
+    } catch (error) {
+      console.error('Error fetching random recipes:', error);
+      // You could set a default state or show an error message to the user
+      setRandomRecipes([]);
+    }
   };
   useEffect(() => {
     getRandom();
@@ -106,8 +112,14 @@ const HomePage = () => {
       params.type = selectedCategory;
     }
 
-    const response = await axios.get(SEARCH_RECIPE_URL, { params });
-    setSearchedRecipes(response.data.results);
+    try {
+      const response = await axios.get(SEARCH_RECIPE_URL, { params });
+      setSearchedRecipes(response.data.results);
+    } catch (error) {
+      console.error('Error searching recipes:', error);
+      // You could set a default state or show an error message to the user
+      setSearchedRecipes([]);
+    }
   };
 
   const handleCategoryChange = (category) => {
@@ -132,8 +144,14 @@ const HomePage = () => {
       params.tags = category;
     }
 
-    const response = await axios.get(RANDOM_RECIPE_URL, { params });
-    setRandomRecipes(response.data.recipes);
+    try {
+      const response = await axios.get(RANDOM_RECIPE_URL, { params });
+      setRandomRecipes(response.data.recipes);
+    } catch (error) {
+      console.error('Error fetching recipes by category:', error);
+      // You could set a default state or show an error message to the user
+      setRandomRecipes([]);
+    }
   };
 
   // Update the useEffect for random recipes
