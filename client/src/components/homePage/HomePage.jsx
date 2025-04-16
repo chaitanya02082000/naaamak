@@ -29,7 +29,7 @@ const HomePage = () => {
   // Function to handle Bookmark click
   const handleBookmarkClick = async (recipeId) => {
     const response = await axios.put(
-      `https://recipe-book-ycpw.onrender.com/users/${user._id}/savedRecipe`,
+      `https://naaamak.onrender.com/users/${user._id}/savedRecipe`,
       { recipeId },
       {
         headers: {

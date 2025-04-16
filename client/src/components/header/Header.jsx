@@ -80,7 +80,7 @@ function Header({searchRecipes, isHome, handleNavigateHome, handleNavigateProfil
         >
           <img
             className="user-image"
-            src={`https://recipe-book-ycpw.onrender.com/assets/${user.picture}`}
+            src={`https://naaamak.onrender.com/assets/${user.picture}`}
             alt="user"
           />
           <span className="user-name">

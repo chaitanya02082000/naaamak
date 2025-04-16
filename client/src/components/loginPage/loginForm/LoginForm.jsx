@@ -111,7 +111,7 @@ const LoginForm = () => {
       }
       formData.append("picture", values.picture.name);
       const savedUserResponse = await axios.post(
-        "https://recipe-book-ycpw.onrender.com/auth/register",
+        "https://naaamak.onrender.com/auth/register",
         formData,
         {
           headers: {
@@ -134,7 +134,7 @@ const LoginForm = () => {
   const login = async (values, onSubmitProps) => {
     try{
     const loggedInResponse = await axios.post(
-      "https://recipe-book-ycpw.onrender.com/auth/login",
+      "https://naaamak.onrender.com/auth/login",
       values,
       {
         headers: {
