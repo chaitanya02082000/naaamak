@@ -1,55 +1,163 @@
-.dropzone-container{
-    padding: 16px;
-    border: 1px solid #434343;
-    border-radius: 6px;
-    margin-top: 20px;
-}
-.dropzone-container:hover{
+.dropzone-container {
+  margin: 1.5rem 0;
+  border: 2px dashed #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: #ff6b6b;
     cursor: pointer;
+  }
 }
-.dropzone-wrapper{
-    border: 2px dashed orange;
-    padding: 16px;
+
+.dropzone-wrapper {
+  text-align: center;
 }
-.add-picture{
-    color: #fff;
-    font-size: 14px;
+
+.add-picture {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0;
 }
+
 .upload {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 14px;
-    .uploaded-file-text{
-        color: #fff;
-        margin-bottom: 0px;
-    }
-    .edit-icon{
-        color: #fff;
-    }
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f9fa;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+
+  .uploaded-file-text {
+    color: #333;
+    font-size: 0.9rem;
+    margin: 0;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .edit-icon {
+    color: #ff6b6b;
+    font-size: 1rem;
+  }
 }
-.button-wrapper button{
-    box-sizing: border-box;
+
+.button-wrapper {
+  margin: 2rem 0 1rem;
+
+  button {
     width: 100%;
-    margin: 20px 0px;
-    padding: 16px 0px;
+    padding: 1rem;
     border: none;
-    border-radius: 4px;
-    color: #fff;
+    border-radius: 8px;
+    background-color: #ff6b6b;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #ff5252;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+.login-or-register {
+  text-align: center;
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: #ff6b6b;
+  }
+}
+
+// Form field styles
+.form-field {
+  margin-bottom: 1.5rem;
+  position: relative;
+
+  label {
+    display: block;
+    color: #333;
+    font-size: 0.9rem;
     font-weight: 500;
-    font-size: 16px;
-    background-color: #2c32e6;
+    margin-bottom: 0.5rem;
+  }
+
+  input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #333;
+    transition: all 0.2s ease;
+    background-color: #f8f9fa;
+    box-shadow: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    height: 48px;
+
+    &:focus {
+      outline: none;
+      border-color: #ff6b6b;
+      background-color: white;
+      box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.1);
+    }
+
+    &::placeholder {
+      color: #999;
+    }
+
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus,
+    &:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 1000px #f8f9fa inset !important;
+      -webkit-text-fill-color: #333 !important;
+      box-shadow: 0 0 0 1000px #f8f9fa inset !important;
+      background-color: #f8f9fa !important;
+    }
+
+    &:-webkit-autofill:focus {
+      -webkit-box-shadow: 0 0 0 1000px white inset !important;
+      box-shadow: 0 0 0 1000px white inset !important;
+      background-color: white !important;
+    }
+  }
+
+  .error {
+    color: #dc3545;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    display: block;
+  }
 }
-.button-wrapper button:hover{
-    cursor: pointer;
-    background-color: #5457b6;
+
+// Toast notification styles
+.Toastify__toast {
+  border-radius: 8px !important;
+  font-size: 0.9rem !important;
 }
-.login-or-register{
-    text-decoration: underline;
-    color: #2c32e6;
-    font-size: 14px;
+
+.Toastify__toast--success {
+  background: #28a745 !important;
 }
-.login-or-register:hover{
-    color: #5457b6;
-    cursor: pointer;
+
+.Toastify__toast--error {
+  background: #dc3545 !important;
 }

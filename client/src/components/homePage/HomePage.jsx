@@ -20,6 +20,27 @@ const HomePage = () => {
   const [recipeDetail, setRecipeDetail] = useState(null);
   const [randomRecipes, setRandomRecipes] = useState([]);
   const [searchedRecipes, setSearchedRecipes] = useState();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
+  // Categories for filtering recipes
+  const categories = [
+    { id: "all", name: "All" },
+    { id: "main course", name: "Main Course" },
+    { id: "side dish", name: "Side Dish" },
+    { id: "dessert", name: "Dessert" },
+    { id: "appetizer", name: "Appetizer" },
+    { id: "salad", name: "Salad" },
+    { id: "bread", name: "Bread" },
+    { id: "breakfast", name: "Breakfast" },
+    { id: "soup", name: "Soup" },
+    { id: "beverage", name: "Beverage" },
+    { id: "sauce", name: "Sauce" },
+    { id: "marinade", name: "Marinade" },
+    { id: "fingerfood", name: "Finger Food" },
+    { id: "snack", name: "Snack" },
+    { id: "drink", name: "Drink" }
+  ];
 
   // API Key and URLs for Spoonacular API
   const API_KEY = process.env.REACT_APP_RECIPE_APP_API_KEY;
@@ -74,13 +95,51 @@ const HomePage = () => {
 
   // Function to search recipes using Spoonacular API
   const searchRecipes = async (query) => {
-    const response = await axios.get(SEARCH_RECIPE_URL, {
-      params: {
-        query: query,
-      },
-    });
+    setSearchQuery(query);
+    let params = {
+      query: query,
+      number: 12
+    };
+
+    // Add type parameter only if a specific category is selected
+    if (selectedCategory !== "all") {
+      params.type = selectedCategory;
+    }
+
+    const response = await axios.get(SEARCH_RECIPE_URL, { params });
     setSearchedRecipes(response.data.results);
   };
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    // If there's a search query, perform a new search with the selected category
+    if (searchQuery) {
+      searchRecipes(searchQuery);
+    } else {
+      // If no search query, get random recipes filtered by category
+      getRandomRecipesByCategory(category);
+    }
+  };
+
+  // New function to get random recipes by category
+  const getRandomRecipesByCategory = async (category) => {
+    let params = {
+      number: 12
+    };
+
+    // Add tags parameter for category filtering
+    if (category !== "all") {
+      params.tags = category;
+    }
+
+    const response = await axios.get(RANDOM_RECIPE_URL, { params });
+    setRandomRecipes(response.data.recipes);
+  };
+
+  // Update the useEffect for random recipes
+  useEffect(() => {
+    getRandomRecipesByCategory(selectedCategory);
+  }, [selectedCategory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Function to navigate to Home Page 
   function handleNavigateHome(){
@@ -102,24 +161,44 @@ const HomePage = () => {
       {/* Renders the recipe list or the recipe detail component */}
       {recipeDetail ? <RecipeDetail recipe = {recipeDetail}/>
       :
-      <div className="recipe-catalogue-container">
-        {/* Renders the searched recipes if available, otherwise renders random recipes */}
-        {searchedRecipes ? 
-         searchedRecipes &&
-         searchedRecipes.map((recipe, index) => {
-           return (
-             <RecipeList key={index} recipe={recipe} recipeType = "searchedRecipe" handleRecipeDetails = {handleRecipeDetails} onBookmarkClick={handleBookmarkClick} isBookmarked={savedRecipes.includes(recipe.id) } isHome = {true} />
-           );
-         }) 
-         :
-        randomRecipes &&
-          randomRecipes.map((recipe, index) => {
-            return (
-              <RecipeList key={index}  recipe={recipe}  recipeType = "randomRecipe" handleRecipeDetails = {handleRecipeDetails} onBookmarkClick={handleBookmarkClick} isBookmarked={savedRecipes.includes(recipe.id)} isHome = {true} />
-            );
-          })  
-          }
-      </div>}
+      <>
+        <div className="hero-section">
+          <div className="hero-content">
+            <h1>Discover Delicious Recipes</h1>
+            <p>Find the perfect recipe for any occasion</p>
+          </div>
+        </div>
+
+        <div className="categories-container">
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              className={`category-btn ${selectedCategory === category.id ? 'active' : ''}`}
+              onClick={() => handleCategoryChange(category.id)}
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="recipe-catalogue-container">
+          {searchedRecipes ? 
+           searchedRecipes &&
+           searchedRecipes.map((recipe, index) => {
+             return (
+               <RecipeList key={index} recipe={recipe} recipeType = "searchedRecipe" handleRecipeDetails = {handleRecipeDetails} onBookmarkClick={handleBookmarkClick} isBookmarked={savedRecipes.includes(recipe.id) } isHome = {true} />
+             );
+           }) 
+           :
+          randomRecipes &&
+            randomRecipes.map((recipe, index) => {
+              return (
+                <RecipeList key={index}  recipe={recipe}  recipeType = "randomRecipe" handleRecipeDetails = {handleRecipeDetails} onBookmarkClick={handleBookmarkClick} isBookmarked={savedRecipes.includes(recipe.id)} isHome = {true} />
+              );
+            })  
+            }
+        </div>
+      </>}
     </div>
   );
 };

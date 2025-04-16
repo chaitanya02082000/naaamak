@@ -1,8 +1,7 @@
-import React,{} from 'react';
+import React from 'react';
 import "../recipeList/RecipeList.scss";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBookmark } from '@fortawesome/free-solid-svg-icons';
-
+import { faBookmark, faClock, faUtensils, faStar } from '@fortawesome/free-solid-svg-icons';
 
 /**
  * Renders a single recipe in the recipe catalog list
@@ -25,27 +24,60 @@ const RecipeList = ({ recipe, recipeType, handleRecipeDetails, onBookmarkClick, 
       handleRecipeDetails(false, recipe);
     }
   }
+
+  // Calculate cooking time in minutes
+  const cookingTime = recipe.readyInMinutes || 30;
+  
+  // Calculate difficulty level
+  const getDifficultyLevel = () => {
+    if (cookingTime <= 30) return 'Easy';
+    if (cookingTime <= 60) return 'Medium';
+    return 'Hard';
+  };
+
   return (
-    <div className='recipe-container' onClick={handleRecipeClick}>
-      <img  src = 
-      {recipe.image}
-       alt = {recipe.title}
-        className='recipe-catalogue-image'/>
-      <div className='recipe-catalogue-title'>
-        <span className='recipe-title'>
-          {recipe.title}
-        </span>
-        {isHome && <FontAwesomeIcon 
-        className={`bookmark-icon ${
-          isBookmarked ? 'bookmarked' : ''
-        }`}
-        icon = {faBookmark} onClick={(e) => {
-          e.stopPropagation();
-          onBookmarkClick(recipe.id)
-        }}/>}
+    <div className='recipe-card' onClick={handleRecipeClick}>
+      <div className='recipe-image-container'>
+        <img 
+          src={recipe.image} 
+          alt={recipe.title}
+          className='recipe-image'
+        />
+        {isHome && (
+          <button 
+            className={`bookmark-button ${isBookmarked ? 'bookmarked' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onBookmarkClick(recipe.id);
+            }}
+          >
+            <FontAwesomeIcon icon={faBookmark} />
+          </button>
+        )}
+      </div>
+      
+      <div className='recipe-content'>
+        <h3 className='recipe-title'>{recipe.title}</h3>
+        
+        <div className='recipe-meta'>
+          <div className='meta-item'>
+            <FontAwesomeIcon icon={faClock} />
+            <span>{cookingTime} min</span>
+          </div>
+          
+          <div className='meta-item'>
+            <FontAwesomeIcon icon={faUtensils} />
+            <span>{getDifficultyLevel()}</span>
+          </div>
+          
+          <div className='meta-item'>
+            <FontAwesomeIcon icon={faStar} />
+            <span>{recipe.spoonacularScore ? Math.round(recipe.spoonacularScore / 20) : 4} / 5</span>
+          </div>
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default RecipeList
+export default RecipeList;
