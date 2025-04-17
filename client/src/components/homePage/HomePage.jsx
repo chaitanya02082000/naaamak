@@ -8,6 +8,7 @@ import RecipeList from "../recipeList/RecipeList";
 import RecipeDetail from "../recipeDetail/RecipeDetail";
 import { setSavedRecipes } from "../../state";
 import { useNavigate } from "react-router-dom";
+import RecipeScraper from "../recipeScraper/RecipeScraper";
 
 // HomePage component
 const HomePage = () => {
@@ -22,6 +23,7 @@ const HomePage = () => {
   const [searchedRecipes, setSearchedRecipes] = useState();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [scrapedRecipe, setScrapedRecipe] = useState(null);
 
   // Categories for filtering recipes
   const categories = [
@@ -171,6 +173,11 @@ const HomePage = () => {
     navigate(`/profile/${userId}`)
   }
 
+  const handleRecipeScraped = (recipe) => {
+    setScrapedRecipe(recipe);
+    setRecipeDetail(recipe);
+  };
+
   return (
     <div className="home-page-container">
       {/* Renders the header component with the search bar and profile icon */}
@@ -186,6 +193,8 @@ const HomePage = () => {
             <p>Find the perfect recipe for any occasion</p>
           </div>
         </div>
+
+        <RecipeScraper onRecipeScraped={handleRecipeScraped} />
 
         <div className="categories-container">
           {categories.map((category) => (

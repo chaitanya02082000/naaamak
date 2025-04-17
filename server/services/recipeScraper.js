@@ -87,7 +87,7 @@ function findRecipe(jdjson) {
 
 async function processWithGemini(recipeData) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-001" });
     
     const prompt = `Given this recipe data, create a well-structured recipe card with appropriate tags and categories. 
     Recipe data: ${JSON.stringify(recipeData)}
@@ -134,9 +134,21 @@ async function scrapeRecipe(url) {
       throw new Error('Could not parse recipe data');
     }
     
-    // Process with Gemini
-    const enhancedRecipe = await processWithGemini(recipeData);
-    return enhancedRecipe;
+    // Add default tags and categories if none exist
+    if (!recipeData.tags) {
+      recipeData.tags = [];
+    }
+    if (!recipeData.categories) {
+      recipeData.categories = [recipeData.category].filter(Boolean);
+    }
+    if (!recipeData.summary) {
+      recipeData.summary = recipeData.description || '';
+    }
+    if (!recipeData.notes) {
+      recipeData.notes = '';
+    }
+    
+    return recipeData;
   } catch (error) {
     console.error('Error scraping recipe:', error);
     throw error;
