@@ -16,7 +16,7 @@ import { register } from "./controllers/auth.js"; // authentication controller f
 import User from "./models/User.js"; // user model
 import SavedRecipes from "./models/SavedRecipes.js"; // saved recipes model
 import { users,  savedRecipes} from "./data/index.js"; // sample data
-import recipeRoutes from "./routes/recipes.js"; // recipe routes
+import recipeRoutes from "./routes/recipeRoutes.js"; // recipe routes
 
 //CONFIGURATIONS AND SETUP
 const __filename = fileURLToPath(import.meta.url);

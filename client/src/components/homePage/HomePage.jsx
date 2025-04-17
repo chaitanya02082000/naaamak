@@ -25,6 +25,7 @@ const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [scrapedRecipe, setScrapedRecipe] = useState(null);
+  const [showScraperView, setShowScraperView] = useState(false);
 
   // Categories for filtering recipes
   const categories = [
@@ -91,16 +92,18 @@ const HomePage = () => {
 
    // Function to set recipe detail state
   const handleRecipeDetails = async (check, recipeDetail) => {
+    // Close scraper view if open
+    setShowScraperView(false);
+    
     if(check){
       const response = await axios.get(`https://api.spoonacular.com/recipes/${recipeDetail}/information?apiKey=${API_KEY}`);
-      const data =  response.data;
-      console.log(data)
+      const data = response.data;
       setRecipeDetail(data);
     }
     else{
       setRecipeDetail(recipeDetail);
     }
-  }
+  };
 
   // Function to search recipes using Spoonacular API
   const searchRecipes = async (query) => {
@@ -165,68 +168,106 @@ const HomePage = () => {
   // Function to navigate to Home Page 
   function handleNavigateHome(){
     setRecipeDetail(null);
+    setShowScraperView(false);
     navigate('/home');
   }
 
   // Function to navigate to Profile Page 
   function handleNavigateProfile(userId){
     setRecipeDetail(null);
-    navigate(`/profile/${userId}`)
+    setShowScraperView(false);
+    navigate(`/profile/${userId}`);
   }
 
   const handleRecipeScraped = (recipe) => {
     setScrapedRecipe(recipe);
-    setRecipeDetail(recipe);
+    setShowScraperView(true);
+  };
+  
+  const handleRecipeSaved = (newRecipe) => {
+    // Add visual feedback that the recipe was saved
+    setScrapedRecipe(null);
+    // Set the recipe detail to the saved recipe
+    setRecipeDetail(newRecipe);
+    setShowScraperView(false);
+  };
+  
+  const handleToggleScraper = () => {
+    setShowScraperView(!showScraperView);
+    if (recipeDetail) {
+      setRecipeDetail(null);
+    }
   };
 
   return (
     <div className="home-page-container">
       {/* Renders the header component with the search bar and profile icon */}
-      <Header searchRecipes={searchRecipes} isHome={true} handleNavigateHome = {handleNavigateHome} handleNavigateProfile = {handleNavigateProfile}/>
+      <Header searchRecipes={searchRecipes} isHome={true} handleNavigateHome={handleNavigateHome} handleNavigateProfile={handleNavigateProfile} />
 
-      {/* Renders the recipe list or the recipe detail component */}
-      {recipeDetail ? <RecipeDetail recipe = {recipeDetail}/>
-      :
-      <>
-        <div className="hero-section">
-          <div className="hero-content">
-            <h1>Discover Delicious Recipes</h1>
-            <p>Find the perfect recipe for any occasion</p>
+      {/* Renders the recipe detail component if a recipe is selected */}
+      {recipeDetail ? (
+        <RecipeDetail recipe={recipeDetail} />
+      ) : (
+        <>
+          <div className="hero-section">
+            <div className="hero-content">
+              <h1>Discover Delicious Recipes</h1>
+              <p>Find the perfect recipe for any occasion</p>
+              <button className="scraper-toggle-btn" onClick={handleToggleScraper}>
+                {showScraperView ? "Browse Recipes" : "Import Recipe from URL"}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <RecipeScraper onRecipeScraped={handleRecipeScraped} />
+          {showScraperView ? (
+            <div className="scraper-container">
+              <RecipeScraper onRecipeScraped={handleRecipeScraped} onRecipeSaved={handleRecipeSaved} />
+            </div>
+          ) : (
+            <>
+              <div className="categories-container">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    className={`category-btn ${selectedCategory === category.id ? 'active' : ''}`}
+                    onClick={() => handleCategoryChange(category.id)}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
 
-        <div className="categories-container">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              className={`category-btn ${selectedCategory === category.id ? 'active' : ''}`}
-              onClick={() => handleCategoryChange(category.id)}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
-
-        <div className="recipe-catalogue-container">
-          {searchedRecipes ? 
-           searchedRecipes &&
-           searchedRecipes.map((recipe, index) => {
-             return (
-               <RecipeList key={index} recipe={recipe} recipeType = "searchedRecipe" handleRecipeDetails = {handleRecipeDetails} onBookmarkClick={handleBookmarkClick} isBookmarked={savedRecipes.includes(recipe.id) } isHome = {true} />
-             );
-           }) 
-           :
-          randomRecipes &&
-            randomRecipes.map((recipe, index) => {
-              return (
-                <RecipeList key={index}  recipe={recipe}  recipeType = "randomRecipe" handleRecipeDetails = {handleRecipeDetails} onBookmarkClick={handleBookmarkClick} isBookmarked={savedRecipes.includes(recipe.id)} isHome = {true} />
-              );
-            })  
-            }
-        </div>
-      </>}
+              <div className="recipe-catalogue-container">
+                {searchedRecipes ? 
+                  searchedRecipes.map((recipe, index) => (
+                    <RecipeList 
+                      key={index} 
+                      recipe={recipe} 
+                      recipeType="searchedRecipe" 
+                      handleRecipeDetails={handleRecipeDetails} 
+                      onBookmarkClick={handleBookmarkClick} 
+                      isBookmarked={savedRecipes.includes(recipe.id)} 
+                      isHome={true} 
+                    />
+                  )) 
+                  :
+                  randomRecipes.map((recipe, index) => (
+                    <RecipeList 
+                      key={index} 
+                      recipe={recipe} 
+                      recipeType="randomRecipe" 
+                      handleRecipeDetails={handleRecipeDetails} 
+                      onBookmarkClick={handleBookmarkClick} 
+                      isBookmarked={savedRecipes.includes(recipe.id)} 
+                      isHome={true} 
+                    />
+                  ))
+                }
+              </div>
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 };

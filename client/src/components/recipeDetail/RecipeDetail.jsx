@@ -11,10 +11,12 @@ const RecipeDetail = ({recipe}) => {
 
   // Helper function to get ingredients in the correct format
   const getIngredients = () => {
-    if (recipe.extendedIngredients) {
+    if (recipe.extendedIngredients && recipe.extendedIngredients.length > 0) {
       // Spoonacular API format
-      return recipe.extendedIngredients.map(ingredient => ingredient.original);
-    } else if (recipe.ingredients) {
+      return recipe.extendedIngredients.map(ingredient => 
+        ingredient.original || ingredient.originalString || ingredient.name || ingredient
+      );
+    } else if (recipe.ingredients && recipe.ingredients.length > 0) {
       // Scraped recipe format
       return recipe.ingredients;
     }
@@ -23,13 +25,26 @@ const RecipeDetail = ({recipe}) => {
 
   // Helper function to get instructions in the correct format
   const getInstructions = () => {
-    if (recipe.instructions) {
-      if (Array.isArray(recipe.instructions)) {
-        // Scraped recipe format (array of steps)
-        return recipe.instructions.join('<br><br>');
+    if (recipe.analyzedInstructions && recipe.analyzedInstructions.length > 0) {
+      // Spoonacular API format
+      const steps = recipe.analyzedInstructions[0].steps;
+      if (steps && steps.length > 0) {
+        return steps.map(step => `${step.number}. ${step.step}`).join('<br><br>');
       }
-      // Spoonacular API format (HTML string)
-      return recipe.instructions;
+    }
+    
+    if (recipe.instructions) {
+      if (typeof recipe.instructions === 'string') {
+        // Already formatted HTML string
+        return recipe.instructions;
+      } else if (Array.isArray(recipe.instructions)) {
+        // Array of step strings or objects
+        return recipe.instructions
+          .map((step, index) => typeof step === 'string' ? 
+            `${index + 1}. ${step}` : 
+            `${step.number || (index + 1)}. ${step.step || JSON.stringify(step)}`)
+          .join('<br><br>');
+      }
     }
     return '';
   };

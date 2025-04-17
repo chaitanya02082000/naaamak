@@ -1,7 +1,7 @@
 import React from 'react';
 import "../recipeList/RecipeList.scss";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBookmark, faClock, faUtensils, faStar } from '@fortawesome/free-solid-svg-icons';
+import { faBookmark, faClock, faUtensils, faStar, faGlobe } from '@fortawesome/free-solid-svg-icons';
 
 /**
  * Renders a single recipe in the recipe catalog list
@@ -10,9 +10,10 @@ import { faBookmark, faClock, faUtensils, faStar } from '@fortawesome/free-solid
  * @param {Function} onBookmarkClick - The function to handle bookmarking a recipe
  * @param {Boolean} isBookmarked - Whether the recipe is bookmarked
  * @param {Boolean} isHome - Whether the recipe is being rendered on the home page
+ * @param {Boolean} isScraped - Whether the recipe is a scraped recipe
  * @returns {JSX.Element} - The recipe list component
  */
-const RecipeList = ({ recipe, recipeType, handleRecipeDetails, onBookmarkClick, isBookmarked, isHome }) => {
+const RecipeList = ({ recipe, recipeType, handleRecipeDetails, onBookmarkClick, isBookmarked, isHome, isScraped = false }) => {
   function handleRecipeClick(){
     if(recipeType === "searchedRecipe"){
       handleRecipeDetails(true, recipe.id);
@@ -26,7 +27,7 @@ const RecipeList = ({ recipe, recipeType, handleRecipeDetails, onBookmarkClick, 
   }
 
   // Calculate cooking time in minutes
-  const cookingTime = recipe.readyInMinutes || 30;
+  const cookingTime = recipe.readyInMinutes || (recipe.cookTime ? recipe.cookTime : 30);
   
   // Calculate difficulty level
   const getDifficultyLevel = () => {
@@ -35,11 +36,19 @@ const RecipeList = ({ recipe, recipeType, handleRecipeDetails, onBookmarkClick, 
     return 'Hard';
   };
 
+  // Get recipe rating or default to 4
+  const getRating = () => {
+    if (recipe.spoonacularScore) {
+      return Math.round(recipe.spoonacularScore / 20);
+    }
+    return 4;
+  };
+
   return (
-    <div className='recipe-card' onClick={handleRecipeClick}>
+    <div className={`recipe-card ${isScraped ? 'scraped-recipe' : ''}`} onClick={handleRecipeClick}>
       <div className='recipe-image-container'>
         <img 
-          src={recipe.image} 
+          src={recipe.image || 'https://via.placeholder.com/300x200?text=No+Image'} 
           alt={recipe.title}
           className='recipe-image'
         />
@@ -54,6 +63,12 @@ const RecipeList = ({ recipe, recipeType, handleRecipeDetails, onBookmarkClick, 
             <FontAwesomeIcon icon={faBookmark} />
           </button>
         )}
+        {isScraped && (
+          <div className="scraped-recipe-badge">
+            <FontAwesomeIcon icon={faGlobe} />
+            <span>Scraped</span>
+          </div>
+        )}
       </div>
       
       <div className='recipe-content'>
@@ -62,7 +77,7 @@ const RecipeList = ({ recipe, recipeType, handleRecipeDetails, onBookmarkClick, 
         <div className='recipe-meta'>
           <div className='meta-item'>
             <FontAwesomeIcon icon={faClock} />
-            <span>{cookingTime} min</span>
+            <span>{cookingTime ? cookingTime : 'N/A'}</span>
           </div>
           
           <div className='meta-item'>
@@ -72,9 +87,23 @@ const RecipeList = ({ recipe, recipeType, handleRecipeDetails, onBookmarkClick, 
           
           <div className='meta-item'>
             <FontAwesomeIcon icon={faStar} />
-            <span>{recipe.spoonacularScore ? Math.round(recipe.spoonacularScore / 20) : 4} / 5</span>
+            <span>{getRating()} / 5</span>
           </div>
         </div>
+        
+        {isScraped && recipe.sourceUrl && (
+          <div className='recipe-source'>
+            <a 
+              href={recipe.sourceUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="source-link"
+            >
+              <FontAwesomeIcon icon={faGlobe} /> Original Source
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );

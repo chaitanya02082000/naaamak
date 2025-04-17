@@ -3,6 +3,8 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 export const API_ENDPOINTS = {
   // Recipe endpoints
   SCRAPE_RECIPE: `${API_URL}/api/recipes/scrape`,
+  SAVE_SCRAPED_RECIPE: (userId) => `${API_URL}/api/recipes/${userId}/save`,
+  GET_USER_SCRAPED_RECIPES: (userId) => `${API_URL}/api/recipes/${userId}`,
   
   // Auth endpoints
   REGISTER: `${API_URL}/auth/register`,
