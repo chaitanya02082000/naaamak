@@ -12,6 +12,11 @@ import Dropzone from "react-dropzone";
 import Input from "../customInput/Input";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useGoogleLogin } from '@react-oauth/google';
+
+// API URLs
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const BACKEND_URL = 'https://naaamak.onrender.com';
 
 // Function to show error popup message
 const notifyError = ( message) => {
@@ -92,6 +97,7 @@ const initialValuesLogin = {
 const LoginForm = () => {
   // set initial state for page type
   const [pageType, setPageType] = useState("register");
+  const [isLoading, setIsLoading] = useState(false);
 
   // define dispatch and navigate hooks for state management and routing
   const dispatch = useDispatch();
@@ -100,6 +106,19 @@ const LoginForm = () => {
   // set variables to determine if form is login or register
   const isLogin = pageType === "login";
   const isRegister = pageType === "register";
+
+  // Function to handle direct Google OAuth redirection
+  const handleGoogleAuthRedirect = () => {
+    setIsLoading(true);
+    
+    // Determine which URL to use based on environment
+    // In production, use the deployed backend URL
+    // In development, use the local backend URL
+    const googleAuthUrl = `${BACKEND_URL}/auth/google`;
+    
+    console.log("Redirecting to Google auth:", googleAuthUrl);
+    window.location.href = googleAuthUrl;
+  };
 
   // function to handle register form submission
   const register = async (values, onSubmitProps) => {
@@ -216,14 +235,39 @@ const LoginForm = () => {
           <Input label="Email Id" name="email" type="email" />
           <Input label="Password" name="password" type="password" />
           <div className="button-wrapper">
-            <button type="submit">{isLogin ? "LOGIN" : "REGISTER"}</button>
+            <button type="submit" disabled={isLoading}>
+              {isLoading ? "Processing..." : isLogin ? "LOGIN" : "REGISTER"}
+            </button>
           </div>
+          
+          {/* Google Sign-In Button */}
+          <div className="google-signin-container">
+            <div className="or-divider">
+              <span>OR</span>
+            </div>
+            <button 
+              type="button" 
+              className="google-signin-button"
+              onClick={handleGoogleAuthRedirect}
+              disabled={isLoading}
+            >
+              <img 
+                src="https://developers.google.com/identity/images/g-logo.png" 
+                alt="Google logo" 
+                className="google-logo"
+              />
+              <span>{isLoading ? "Please wait..." : "Sign in with Google"}</span>
+            </button>
+          </div>
+          
           <div
             onClick={() => {
-              setPageType(isLogin ? "register" : "login"); // Set the page type to "register" or "login" based on whether the user clicked "Don't have an account? Sign Up here." or "Already have an account? Login here."
-              props.resetForm(); // Reset the form values when the user switches between the "login" and "register" pages
+              if (!isLoading) {
+                setPageType(isLogin ? "register" : "login"); // Set the page type to "register" or "login" based on whether the user clicked "Don't have an account? Sign Up here." or "Already have an account? Login here."
+                props.resetForm(); // Reset the form values when the user switches between the "login" and "register" pages
+              }
             }}
-            className="login-or-register"
+            className={`login-or-register ${isLoading ? 'disabled' : ''}`}
           >
             {isLogin
               ? "Don't have an account? Sign Up here."
