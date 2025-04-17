@@ -1,5 +1,6 @@
 import React from 'react';
 import "../user/User.scss";
+import { API_ENDPOINTS } from "../../config";
 
 
 /**
@@ -16,7 +17,7 @@ const User = ({user}) => {
             <span className='user-email-style'>{user.email}</span>
         </div>
         <div>
-            <img  src={`https://naaamak.onrender.com/assets/${user.picture}`} alt={user.picture} className='user-image-style' />
+            <img  src={API_ENDPOINTS.GET_USER_PICTURE(user.picture)} alt={user.picture} className='user-image-style' />
         </div>
     </div>
   )

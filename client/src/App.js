@@ -3,7 +3,6 @@ import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
 import HomePage from "./components/homePage/HomePage";
 import ProfilePage from "./components/profilePage/ProfilePage";
 import LoginPage from "./components/loginPage/loginPage/LoginPage";
-import OAuthCallback from "./components/loginPage/OAuthCallback";
 import {useSelector} from "react-redux";
 
 // Main App component
@@ -17,8 +16,6 @@ function App() {
         <Routes>
           {/* Defining the routes and their corresponding components */}
           <Route path = "/" element = {<LoginPage />} />
-          {/* OAuth callback route */}
-          <Route path = "/oauth-callback" element = {<OAuthCallback />} />
           {/* If authenticated, render HomePage component, else navigate to login page */}
           <Route path = "/home" element = {isAuth ? <HomePage /> : <Navigate  to = "/" />} /> 
           {/* If authenticated, render ProfilePage component, else navigate to login page */}

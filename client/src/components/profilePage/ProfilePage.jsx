@@ -8,6 +8,7 @@ import User from "../user/User";
 import RecipeList from "../recipeList/RecipeList";
 import RecipeDetail from "../recipeDetail/RecipeDetail";
 import { useNavigate } from "react-router-dom";
+import { API_ENDPOINTS } from "../../config";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ const ProfilePage = () => {
       try{
        // Fetch saved recipes from the backend
       const savedRecipesResponse = await axios.get(
-        `https://naaamak.onrender.com/users/${user._id}/savedRecipe`,
+        API_ENDPOINTS.GET_USER_SAVED_RECIPES(user._id),
         {
           headers: {
             "Content-Type": "application/json",

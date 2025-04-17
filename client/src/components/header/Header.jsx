@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass, faGear } from "@fortawesome/free-solid-svg-icons";
 import { useDispatch, useSelector } from "react-redux";
 import {setLogout} from "../../state/index";
+import { API_ENDPOINTS } from "../../config";
 /**
  * The Header component displays the application header with the logo, search bar,
  * and user profile settings.
@@ -80,7 +81,7 @@ function Header({searchRecipes, isHome, handleNavigateHome, handleNavigateProfil
         >
           <img
             className="user-image"
-            src={`https://naaamak.onrender.com/assets/${user.picture}`}
+            src={API_ENDPOINTS.GET_USER_PICTURE(user.picture)}
             alt="no image"
           />
           <span className="user-name">

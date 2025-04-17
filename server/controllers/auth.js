@@ -60,38 +60,3 @@ export const login = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
-/**
- * Handles Google OAuth callback.
- * After Google authentication is successful, generates a JWT token
- * and sends it in the response along with the user object.
- */
-export const googleCallback = async (req, res) => {
-  try {
-    console.log("Google callback controller hit");
-    // Passport puts the authenticated user in req.user
-    const user = req.user;
-    
-    if (!user) {
-      console.error("No user in request after Google authentication");
-      return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=authentication_failed`);
-    }
-    
-    console.log("Google authentication successful for user:", user._id);
-    
-    // Generate JWT token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-    
-    // Get the client URL from environment or use default
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
-    const redirectUrl = `${clientUrl}/oauth-callback?token=${token}&userId=${user._id}`;
-    
-    console.log("Redirecting to:", redirectUrl);
-    
-    // Redirect with token and user info
-    res.redirect(redirectUrl);
-  } catch (err) {
-    console.error("Google callback error:", err);
-    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/login?error=server_error`);
-  }
-};

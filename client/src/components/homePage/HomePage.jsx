@@ -9,6 +9,7 @@ import RecipeDetail from "../recipeDetail/RecipeDetail";
 import { setSavedRecipes } from "../../state";
 import { useNavigate } from "react-router-dom";
 import RecipeScraper from "../recipeScraper/RecipeScraper";
+import { API_ENDPOINTS } from "../../config";
 
 // HomePage component
 const HomePage = () => {
@@ -52,7 +53,7 @@ const HomePage = () => {
   // Function to handle Bookmark click
   const handleBookmarkClick = async (recipeId) => {
     const response = await axios.put(
-      `https://naaamak.onrender.com/users/${user._id}/savedRecipe`,
+      API_ENDPOINTS.SAVE_RECIPE(user._id),
       { recipeId },
       {
         headers: {
