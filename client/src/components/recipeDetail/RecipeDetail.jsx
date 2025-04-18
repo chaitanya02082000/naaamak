@@ -26,6 +26,7 @@ const RecipeDetail = ({ recipe: propRecipe }) => {
   const [geminiAnswer, setGeminiAnswer] = useState('');
   const [geminiLoading, setGeminiLoading] = useState(false);
   const [geminiError, setGeminiError] = useState('');
+  const [isFormattedResponse, setIsFormattedResponse] = useState(false);
 
   // Sample AI questions that users can quickly select
   const sampleQuestions = [
@@ -107,6 +108,7 @@ const RecipeDetail = ({ recipe: propRecipe }) => {
     setGeminiLoading(true);
     setGeminiAnswer('');
     setGeminiError('');
+    setIsFormattedResponse(false);
 
     try {
       console.log('Sending question about recipe:', recipeId);
@@ -142,6 +144,10 @@ const RecipeDetail = ({ recipe: propRecipe }) => {
       
       if (response.data && response.data.answer) {
         setGeminiAnswer(response.data.answer);
+        // Check if response is formatted
+        if (response.data.formatted) {
+          setIsFormattedResponse(true);
+        }
       } else {
         setGeminiError('Received empty response from AI service.');
       }
@@ -374,9 +380,52 @@ const RecipeDetail = ({ recipe: propRecipe }) => {
               <h3>AI Answer:</h3>
               <div className="answer-container">
                 <div className="answer-content">
-                  {geminiAnswer.split('\n').map((paragraph, index) => (
-                    paragraph ? <p key={index}>{paragraph}</p> : <br key={index} />
-                  ))}
+                  {isFormattedResponse ? (
+                    <div className="formatted-response">
+                      {geminiAnswer.split('\n').map((paragraph, index) => {
+                        // Handle section headers (bolded text with colons)
+                        if (paragraph.match(/^\*\*.*?\*\*:/)) {
+                          const headerText = paragraph.replace(/^\*\*(.*?)\*\*:/, '$1:');
+                          return <h4 key={index}>{headerText}</h4>;
+                        }
+                        
+                        // Handle bullet points
+                        else if (paragraph.trim().startsWith('* ') || paragraph.trim().startsWith('- ')) {
+                          return (
+                            <div key={index} className="bullet-point">
+                              {paragraph.replace(/^[*-]\s+/, '').split('*').map((part, i) => 
+                                i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+                              )}
+                            </div>
+                          );
+                        }
+                        
+                        // Handle normal paragraphs with bold formatting
+                        else if (paragraph.includes('**')) {
+                          return (
+                            <p key={index}>
+                              {paragraph.split('**').map((part, i) => 
+                                i % 2 === 1 ? <strong key={i}>{part}</strong> : part
+                              )}
+                            </p>
+                          );
+                        }
+                        
+                        // Regular paragraphs
+                        else if (paragraph) {
+                          return <p key={index}>{paragraph}</p>;
+                        }
+                        
+                        // Empty lines
+                        return <br key={index} />;
+                      })}
+                    </div>
+                  ) : (
+                    // Standard text rendering for non-formatted responses
+                    geminiAnswer.split('\n').map((paragraph, index) => (
+                      paragraph ? <p key={index}>{paragraph}</p> : <br key={index} />
+                    ))
+                  )}
                 </div>
                 <button
                   className="copy-button"

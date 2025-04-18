@@ -58,6 +58,16 @@ const RecipeSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    alternatives: {
+      formatted: {
+        type: Boolean,
+        default: false
+      },
+      content: {
+        type: String,
+        default: ""
+      }
+    },
     sourceUrl: {
       type: String,
       required: true,

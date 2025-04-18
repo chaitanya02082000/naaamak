@@ -247,6 +247,50 @@ ul li{
         p:last-child {
           margin-bottom: 0;
         }
+
+        .formatted-response {
+          h4 {
+            color: #5457b6;
+            margin: 1.2rem 0 0.5rem;
+            font-size: 1.05rem;
+            border-bottom: 1px solid rgba(84, 87, 182, 0.3);
+            padding-bottom: 0.25rem;
+          }
+
+          h4:first-child {
+            margin-top: 0;
+          }
+
+          .bullet-point {
+            padding: 0.25rem 0 0.25rem 1rem;
+            position: relative;
+            color: #fff;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+
+            &:before {
+              content: "•";
+              position: absolute;
+              left: 0;
+              color: #5457b6;
+              font-weight: bold;
+            }
+
+            strong {
+              color: #a3a4e0;
+              font-weight: 600;
+            }
+          }
+
+          strong {
+            color: #a3a4e0;
+            font-weight: 600;
+          }
+
+          p {
+            margin-bottom: 0.8rem;
+          }
+        }
       }
       
       .copy-button {

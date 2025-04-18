@@ -93,21 +93,30 @@ async function processWithGemini(recipeData) {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-04-17" });
     
-    const prompt = `Given this recipe data, create a well-structured recipe card with appropriate tags and categories. 
+    const prompt = `Given this recipe data, create a well-structured recipe card with appropriate tags, categories, and visual formatting.
     Recipe data: ${JSON.stringify(recipeData)}
     
     Please provide:
     1. A list of relevant tags (e.g., vegetarian, gluten-free, quick-meals)
     2. A list of categories (e.g., breakfast, lunch, dinner, dessert)
-    3. A brief summary of the recipe
-    4. Any additional notes or suggestions
+    3. A brief summary of the recipe that describes its key features in an engaging way
+    4. Any additional notes or suggestions for serving, storage, or variations
+    5. For recipe alternatives or substitutions, structure them as follows:
+       - Use clear section headers with bold formatting ("**Section Title:**")
+       - For lists of alternatives, use bullet points with item names in bold
+       - Organize pros and cons in a tabular style when applicable
+       - Keep paragraphs short and use line breaks for readability
     
     Format the response as JSON with the following structure:
     {
       "tags": [],
       "categories": [],
       "summary": "",
-      "notes": ""
+      "notes": "",
+      "alternatives": {
+        "formatted": true,
+        "content": ""
+      }
     }`;
     
     const result = await model.generateContent(prompt);
@@ -115,14 +124,76 @@ async function processWithGemini(recipeData) {
     const text = response.text();
     
     // Parse the response and combine with original recipe data
-    const geminiData = JSON.parse(text);
-    return {
-      ...recipeData,
-      ...geminiData
-    };
+    try {
+      // Extract JSON from the response
+      const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/{[\s\S]*}/);
+      const jsonString = jsonMatch ? jsonMatch[0].replace(/```json|```/g, '') : text;
+      
+      // Parse the JSON data
+      const geminiData = JSON.parse(jsonString);
+      
+      // Format and process the data for better visualization
+      if (geminiData.tags && Array.isArray(geminiData.tags)) {
+        geminiData.tags = geminiData.tags.map(tag => tag.trim().toLowerCase());
+      } else {
+        geminiData.tags = [];
+      }
+      
+      if (geminiData.categories && Array.isArray(geminiData.categories)) {
+        geminiData.categories = geminiData.categories.map(category => category.trim());
+      } else {
+        geminiData.categories = [];
+      }
+      
+      // Format the summary with paragraph breaks
+      if (geminiData.summary) {
+        geminiData.summary = geminiData.summary.trim();
+      }
+      
+      // Format notes with bullet points if needed
+      if (geminiData.notes) {
+        geminiData.notes = geminiData.notes.trim();
+      }
+      
+      // Initialize alternatives if not present
+      if (!geminiData.alternatives) {
+        geminiData.alternatives = {
+          formatted: true,
+          content: ""
+        };
+      }
+      
+      return {
+        ...recipeData,
+        ...geminiData
+      };
+    } catch (parseError) {
+      console.error('Error parsing Gemini response:', parseError);
+      return {
+        ...recipeData,
+        tags: [],
+        categories: [recipeData.category].filter(Boolean),
+        summary: recipeData.description || '',
+        notes: '',
+        alternatives: {
+          formatted: false,
+          content: ''
+        }
+      };
+    }
   } catch (error) {
     console.error('Error processing with Gemini:', error);
-    return recipeData;
+    return {
+      ...recipeData,
+      tags: [],
+      categories: [recipeData.category].filter(Boolean),
+      summary: recipeData.description || '',
+      notes: '',
+      alternatives: {
+        formatted: false,
+        content: ''
+      }
+    };
   }
 }
 

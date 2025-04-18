@@ -183,6 +183,7 @@ export const saveScrapedRecipe = async (req, res) => {
       categories: categories,
       cuisine: cuisine,
       notes: recipeData.notes || '',
+      alternatives: recipeData.alternatives || { formatted: false, content: '' },
       sourceUrl: sourceUrl,
       userId: userId
     });
@@ -380,9 +381,16 @@ export const askAboutRecipe = async (req, res) => {
       
       // Process the AI response to enhance it if needed
       const processedResponse = processAIResponse(text, question, recipe);
+
+      // Check if this is a question about alternatives or substitutions
+      // and format the response accordingly
+      const formattedResponse = formatResponseForClient(processedResponse, question);
       
       console.log('📤 Sending answer to client');
-      res.status(200).json({ answer: processedResponse });
+      res.status(200).json({ 
+        answer: formattedResponse.content,
+        formatted: formattedResponse.formatted
+      });
     } catch (geminiError) {
       console.error('❌ Gemini API error:', geminiError);
       // More detailed error information
@@ -465,7 +473,8 @@ These recommendations are based on culinary principles of balancing flavors, tex
     // Handle substitution questions
     if (questionLower.includes("substitute") || 
         questionLower.includes("instead of") ||
-        questionLower.includes("replace")) {
+        questionLower.includes("replace") ||
+        questionLower.includes("alternative")) {
       
       // Try to identify the ingredient being asked about
       const ingredients = recipe.ingredients || recipe.extendedIngredients || [];
@@ -506,6 +515,38 @@ Remember that cooking is flexible and you can adapt recipes based on your prefer
   }
   
   return response;
+};
+
+// Helper function to format the response for better visualization 
+const formatResponseForClient = (response, question) => {
+  const questionLower = question.toLowerCase();
+  
+  // Check if this is a question about alternatives, substitutions, or dietary restrictions
+  const isAlternativeQuestion = 
+    questionLower.includes("substitute") || 
+    questionLower.includes("instead of") ||
+    questionLower.includes("replace") ||
+    questionLower.includes("alternative") ||
+    questionLower.includes("vegan") ||
+    questionLower.includes("vegetarian") ||
+    questionLower.includes("gluten-free") ||
+    questionLower.includes("dairy-free") ||
+    questionLower.includes("allergy") ||
+    questionLower.includes("without");
+  
+  if (isAlternativeQuestion) {
+    // Return the formatted response
+    return {
+      formatted: true,
+      content: response
+    };
+  }
+  
+  // For other types of questions, return as is
+  return {
+    formatted: false,
+    content: response
+  };
 };
 
 // Helper function to detect likely cuisine based on recipe ingredients/title
