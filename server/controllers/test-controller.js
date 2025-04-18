@@ -58,6 +58,8 @@ async function testAskAboutRecipe() {
     
     // Create prompt - similar to what the controller does
     const prompt = `
+      You are a helpful cooking assistant for an online recipe book application. Your goal is to provide detailed, accurate answers about recipes and offer helpful substitutions and cooking tips.
+      
       Based on the following recipe:
 
       Title: ${sampleRecipe.title}
@@ -71,7 +73,29 @@ async function testAskAboutRecipe() {
       Please answer the following question:
       ${question}
 
-      Only use the information provided in the recipe details above. If the answer cannot be found in the recipe details, please state that clearly. Do not make up information.
+      IMPORTANT GUIDELINES:
+      1. NEVER respond with statements like "I cannot determine..." or "The recipe does not provide...". Instead, use your cooking knowledge to offer suggestions.
+      
+      2. For substitution questions:
+         - Explain why certain substitutions work or don't work
+         - Always suggest multiple alternatives with pros/cons
+         - Consider texture, flavor, and cooking properties
+      
+      3. For questions about side dishes or pairings:
+         - Based on the recipe's cuisine, ingredients, and flavors, suggest at least 3 appropriate side dishes
+         - For main dishes, consider complementary flavors, textures, and colors
+         - Include at least one vegetable option and one starch option when appropriate
+      
+      4. For dietary adaptation questions (vegan, gluten-free, etc.):
+         - Provide detailed substitutions for each relevant ingredient
+         - Mention any cooking technique adjustments needed
+      
+      5. For storage or make-ahead questions:
+         - Provide specific storage methods, containers, and timeframes
+         - Include reheating instructions
+      
+      6. ALWAYS provide a helpful, detailed response even if the information is not explicitly in the recipe.
+      7. Clearly preface suggestions with phrases like "While not specified in the recipe, I recommend..." or "Based on culinary principles..."
     `;
     
     console.log('📝 Created prompt for question:', question);

@@ -27,6 +27,15 @@ const RecipeDetail = ({ recipe: propRecipe }) => {
   const [geminiLoading, setGeminiLoading] = useState(false);
   const [geminiError, setGeminiError] = useState('');
 
+  // Sample AI questions that users can quickly select
+  const sampleQuestions = [
+    "What can I substitute for ___ in this recipe?",
+    "How can I make this recipe vegetarian/vegan?",
+    "Can I prepare any parts of this recipe ahead of time?",
+    "How should I store leftovers?",
+    "What side dishes would pair well with this?"
+  ];
+
   useEffect(() => {
     // If recipe was provided as prop, use it and skip fetching
     if (propRecipe) {
@@ -228,6 +237,33 @@ const RecipeDetail = ({ recipe: propRecipe }) => {
     return '';
   };
 
+  const handleSampleQuestion = (question) => {
+    // For the ingredient substitution question, try to automatically fill in an ingredient
+    if (question.includes("___")) {
+      const ingredients = getIngredients();
+      // Pick a notable ingredient to suggest substituting if we have ingredients
+      if (ingredients && ingredients.length > 0) {
+        // Try to find a main ingredient that's not a common staple
+        const commonIngredients = ['salt', 'pepper', 'water', 'oil', 'sugar'];
+        const substantialIngredient = ingredients.find(i => {
+          const ing = typeof i === 'string' ? i.toLowerCase() : '';
+          return ing.length > 3 && !commonIngredients.some(common => ing.includes(common));
+        }) || ingredients[0];
+        
+        // Extract just the ingredient name from the text if needed
+        const ingredientName = typeof substantialIngredient === 'string' 
+          ? substantialIngredient.split(',')[0].trim() 
+          : 'an ingredient';
+          
+        question = question.replace("___", ingredientName);
+      } else {
+        question = question.replace("___", "an ingredient");
+      }
+    }
+    
+    setGeminiQuestion(question);
+  };
+
   if (loading) return <div className="loading">Loading recipe...</div>;
   if (error) return <div className="error">{error}</div>;
   if (!recipe) return <div className="no-recipe">Recipe not found or still loading.</div>;
@@ -308,10 +344,26 @@ const RecipeDetail = ({ recipe: propRecipe }) => {
             <textarea
               value={geminiQuestion}
               onChange={(e) => setGeminiQuestion(e.target.value)}
-              placeholder="e.g., Can I substitute chicken for beef?"
+              placeholder="Ask anything about this recipe! E.g., substitutions, dietary adaptations, cooking techniques, storage tips..."
               rows="3"
               disabled={geminiLoading}
             />
+            <div className="sample-questions">
+              <p>Or try one of these:</p>
+              <div className="question-buttons">
+                {sampleQuestions.map((question, index) => (
+                  <button 
+                    key={index}
+                    type="button"
+                    className="sample-question-btn"
+                    onClick={() => handleSampleQuestion(question)}
+                    disabled={geminiLoading}
+                  >
+                    {question.length > 25 ? question.substring(0, 23) + '...' : question}
+                  </button>
+                ))}
+              </div>
+            </div>
             <button type="submit" disabled={geminiLoading}>
               {geminiLoading ? 'Asking AI...' : 'Ask Question'}
             </button>
@@ -320,7 +372,23 @@ const RecipeDetail = ({ recipe: propRecipe }) => {
           {geminiAnswer && (
             <div className="gemini-answer">
               <h3>AI Answer:</h3>
-              <p>{geminiAnswer}</p>
+              <div className="answer-container">
+                <div className="answer-content">
+                  {geminiAnswer.split('\n').map((paragraph, index) => (
+                    paragraph ? <p key={index}>{paragraph}</p> : <br key={index} />
+                  ))}
+                </div>
+                <button
+                  className="copy-button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(geminiAnswer);
+                    // Optional: You could add a temporary "Copied!" feedback here
+                  }}
+                  title="Copy to clipboard"
+                >
+                  📋
+                </button>
+              </div>
             </div>
           )}
         </div>

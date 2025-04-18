@@ -330,6 +330,8 @@ export const askAboutRecipe = async (req, res) => {
 
     console.log('📝 Creating prompt with recipe data and question:', question);
     const prompt = `
+      You are a helpful cooking assistant for an online recipe book application. Your goal is to provide detailed, accurate answers about recipes and offer helpful substitutions and cooking tips.
+      
       Based on the following recipe:
 
       Title: ${recipe.title || recipe.name || 'Untitled Recipe'}
@@ -344,7 +346,29 @@ export const askAboutRecipe = async (req, res) => {
       Please answer the following question:
       ${question}
 
-      Only use the information provided in the recipe details above. If the answer cannot be found in the recipe details, please state that clearly. Do not make up information.
+      IMPORTANT GUIDELINES:
+      1. NEVER respond with statements like "I cannot determine..." or "The recipe does not provide...". Instead, use your cooking knowledge to offer suggestions.
+      
+      2. For substitution questions:
+         - Explain why certain substitutions work or don't work
+         - Always suggest multiple alternatives with pros/cons
+         - Consider texture, flavor, and cooking properties
+      
+      3. For questions about side dishes or pairings:
+         - Based on the recipe's cuisine, ingredients, and flavors, suggest at least 3 appropriate side dishes
+         - For main dishes, consider complementary flavors, textures, and colors
+         - Include at least one vegetable option and one starch option when appropriate
+      
+      4. For dietary adaptation questions (vegan, gluten-free, etc.):
+         - Provide detailed substitutions for each relevant ingredient
+         - Mention any cooking technique adjustments needed
+      
+      5. For storage or make-ahead questions:
+         - Provide specific storage methods, containers, and timeframes
+         - Include reheating instructions
+      
+      6. ALWAYS provide a helpful, detailed response even if the information is not explicitly in the recipe.
+      7. Clearly preface suggestions with phrases like "While not specified in the recipe, I recommend..." or "Based on culinary principles..."
     `;
 
     console.log('🔄 Calling Gemini API...');
@@ -353,8 +377,12 @@ export const askAboutRecipe = async (req, res) => {
       console.log('✅ Gemini API response received');
       const response = await result.response;
       const text = response.text();
+      
+      // Process the AI response to enhance it if needed
+      const processedResponse = processAIResponse(text, question, recipe);
+      
       console.log('📤 Sending answer to client');
-      res.status(200).json({ answer: text });
+      res.status(200).json({ answer: processedResponse });
     } catch (geminiError) {
       console.error('❌ Gemini API error:', geminiError);
       // More detailed error information
@@ -372,4 +400,132 @@ export const askAboutRecipe = async (req, res) => {
     console.error("❌ General error in askAboutRecipe:", error);
     res.status(500).json({ message: "Error processing your question with the AI service." });
   }
+};
+
+// Helper function to process and enhance AI responses
+const processAIResponse = (response, question, recipe) => {
+  // Don't process empty responses
+  if (!response || response.trim() === '') {
+    return "I couldn't generate a response for this question. Please try asking something else about the recipe.";
+  }
+  
+  const questionLower = question.toLowerCase();
+  const responseLower = response.toLowerCase();
+  
+  // Check for non-helpful "cannot determine" or "does not provide" responses
+  const unhelpfulPhrases = [
+    "cannot determine", 
+    "does not provide", 
+    "not mentioned",
+    "no specific", 
+    "doesn't mention",
+    "not specified"
+  ];
+  
+  // Check if the response contains unhelpful phrases and doesn't provide alternatives
+  const isUnhelpfulResponse = unhelpfulPhrases.some(phrase => 
+    responseLower.includes(phrase) && 
+    !responseLower.includes("however") && 
+    !responseLower.includes("instead") &&
+    !responseLower.includes("recommend") &&
+    !responseLower.includes("suggest")
+  );
+  
+  if (isUnhelpfulResponse) {
+    const recipeName = recipe?.title || recipe?.name || "this recipe";
+    const recipeCuisine = detectCuisine(recipe);
+    
+    // Handle side dish questions
+    if (questionLower.includes("side dish") || 
+        questionLower.includes("pair with") || 
+        questionLower.includes("serve with") ||
+        questionLower.includes("accompaniment") ||
+        questionLower.includes("go with")) {
+      
+      return `While not explicitly mentioned in the recipe, here are some side dish recommendations for ${recipeName}:
+
+1. Vegetable options: 
+   - A simple green salad with a light vinaigrette
+   - Roasted seasonal vegetables (broccoli, cauliflower, carrots)
+   - Sautéed green beans with garlic and lemon
+
+2. Starch options:
+   - Fluffy white or brown rice
+   - Crusty bread or dinner rolls
+   - Roasted or mashed potatoes
+
+3. Additional complementary sides:
+   - Fresh cucumber and tomato salad
+   - Steamed vegetables with herbs
+   - Light fruit salad (especially good with spicy dishes)
+
+These recommendations are based on culinary principles of balancing flavors, textures, and providing nutritional variety.`;
+    }
+    
+    // Handle substitution questions
+    if (questionLower.includes("substitute") || 
+        questionLower.includes("instead of") ||
+        questionLower.includes("replace")) {
+      
+      // Try to identify the ingredient being asked about
+      const ingredients = recipe.ingredients || recipe.extendedIngredients || [];
+      let ingredientList = Array.isArray(ingredients) ? ingredients : [ingredients];
+      
+      // Convert ingredient objects to strings if needed
+      ingredientList = ingredientList.map(ing => 
+        typeof ing === 'string' ? ing.toLowerCase() : 
+        ing.original ? ing.original.toLowerCase() : 
+        ing.name ? ing.name.toLowerCase() : ''
+      ).filter(Boolean);
+      
+      // Extract potential ingredient from question
+      const words = questionLower.split(/\s+/);
+      const potentialIngredient = words.find(word => 
+        word.length > 3 && ingredientList.some(ing => ing.includes(word))
+      );
+      
+      if (potentialIngredient) {
+        return `While not specified in the recipe, here are some substitution options for ${potentialIngredient}:
+
+1. Common substitutes include [list 2-3 appropriate alternatives with similar properties]
+2. Each substitute will affect the dish slightly differently: [brief explanation of differences]
+3. Adjust the quantity when substituting, as flavors and textures may vary in intensity
+
+Choose based on your dietary needs and flavor preferences. Testing a small amount first can help determine if the substitute works well in this dish.`;
+      }
+      
+      return `When making substitutions, consider the role of the ingredient in the recipe (texture, flavor, binding, etc.) and try to match those properties. Without knowing the specific ingredient you're looking to substitute, it's hard to give precise recommendations. However, many common ingredients have several alternatives that work well.`;
+    }
+    
+    // Default enhancement for other unhelpful responses
+    return `While the recipe doesn't explicitly address this, here are some helpful suggestions based on culinary principles: 
+
+${response}
+
+Remember that cooking is flexible and you can adapt recipes based on your preferences and available ingredients.`;
+  }
+  
+  return response;
+};
+
+// Helper function to detect likely cuisine based on recipe ingredients/title
+const detectCuisine = (recipe) => {
+  if (!recipe) return "general";
+  
+  const text = [
+    recipe.title || recipe.name || "",
+    recipe.description || recipe.summary || "",
+    recipe.cuisine || "",
+    Array.isArray(recipe.ingredients) ? recipe.ingredients.join(" ") : ""
+  ].join(" ").toLowerCase();
+  
+  // Simple cuisine detection based on keywords
+  if (text.match(/pasta|italian|pizza|lasagna|parmesan|risotto/)) return "Italian";
+  if (text.match(/taco|mexican|burrito|enchilada|tortilla|salsa|queso/)) return "Mexican";
+  if (text.match(/curry|indian|tikka|masala|garam|naan|chutney/)) return "Indian";
+  if (text.match(/stir.fry|chinese|soy sauce|wok|tofu|rice.wine|szechuan|hoisin/)) return "Chinese";
+  if (text.match(/sushi|japanese|miso|teriyaki|dashi|sake|wasabi/)) return "Japanese";
+  if (text.match(/thai|coconut.milk|fish.sauce|lemongrass|pad.thai/)) return "Thai";
+  
+  return "general";
 }; 

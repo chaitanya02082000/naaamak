@@ -45,6 +45,8 @@ export const askAboutRecipe = async (req, res) => {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
+      You are a helpful cooking assistant for an online recipe book application. Your goal is to provide detailed, accurate answers about recipes and offer helpful substitutions and cooking tips.
+      
       Based on the following recipe:
 
       Title: ${recipe.name}
@@ -56,14 +58,39 @@ export const askAboutRecipe = async (req, res) => {
       Please answer the following question:
       ${question}
 
-      Only use the information provided in the recipe details above. If the answer cannot be found in the recipe details, please state that clearly. Do not make up information.
+      IMPORTANT GUIDELINES:
+      1. NEVER respond with statements like "I cannot determine..." or "The recipe does not provide...". Instead, use your cooking knowledge to offer suggestions.
+      
+      2. For substitution questions:
+         - Explain why certain substitutions work or don't work
+         - Always suggest multiple alternatives with pros/cons
+         - Consider texture, flavor, and cooking properties
+      
+      3. For questions about side dishes or pairings:
+         - Based on the recipe's cuisine, ingredients, and flavors, suggest at least 3 appropriate side dishes
+         - For main dishes, consider complementary flavors, textures, and colors
+         - Include at least one vegetable option and one starch option when appropriate
+      
+      4. For dietary adaptation questions (vegan, gluten-free, etc.):
+         - Provide detailed substitutions for each relevant ingredient
+         - Mention any cooking technique adjustments needed
+      
+      5. For storage or make-ahead questions:
+         - Provide specific storage methods, containers, and timeframes
+         - Include reheating instructions
+      
+      6. ALWAYS provide a helpful, detailed response even if the information is not explicitly in the recipe.
+      7. Clearly preface suggestions with phrases like "While not specified in the recipe, I recommend..." or "Based on culinary principles..."
     `;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    res.status(200).json({ answer: text });
+    // Process the response to provide better answers when needed
+    const processedResponse = processAIResponse(text, question, recipe);
+
+    res.status(200).json({ answer: processedResponse });
 
   } catch (error) {
     console.error("Error in askAboutRecipe:", error);
@@ -74,4 +101,74 @@ export const askAboutRecipe = async (req, res) => {
      // Add more specific checks if needed (e.g., rate limits)
     res.status(500).json({ message: "Error processing your question with the AI service." });
   }
+};
+
+// Helper function to process and enhance AI responses
+const processAIResponse = (response, question, recipe) => {
+  // Don't process empty responses
+  if (!response || response.trim() === '') {
+    return "I couldn't generate a response for this question. Please try asking something else about the recipe.";
+  }
+  
+  const questionLower = question.toLowerCase();
+  const responseLower = response.toLowerCase();
+  
+  // Check for non-helpful "cannot determine" or "does not provide" responses
+  const unhelpfulPhrases = [
+    "cannot determine", 
+    "does not provide", 
+    "not mentioned",
+    "no specific", 
+    "doesn't mention",
+    "not specified"
+  ];
+  
+  // Check if the response contains unhelpful phrases and doesn't provide alternatives
+  const isUnhelpfulResponse = unhelpfulPhrases.some(phrase => 
+    responseLower.includes(phrase) && 
+    !responseLower.includes("however") && 
+    !responseLower.includes("instead") &&
+    !responseLower.includes("recommend") &&
+    !responseLower.includes("suggest")
+  );
+  
+  if (isUnhelpfulResponse) {
+    const recipeName = recipe?.name || "this recipe";
+    
+    // Handle side dish questions
+    if (questionLower.includes("side dish") || 
+        questionLower.includes("pair with") || 
+        questionLower.includes("serve with") ||
+        questionLower.includes("accompaniment") ||
+        questionLower.includes("go with")) {
+      
+      return `While not explicitly mentioned in the recipe, here are some side dish recommendations for ${recipeName}:
+
+1. Vegetable options: 
+   - A simple green salad with a light vinaigrette
+   - Roasted seasonal vegetables (broccoli, cauliflower, carrots)
+   - Sautéed green beans with garlic and lemon
+
+2. Starch options:
+   - Fluffy white or brown rice
+   - Crusty bread or dinner rolls
+   - Roasted or mashed potatoes
+
+3. Additional complementary sides:
+   - Fresh cucumber and tomato salad
+   - Steamed vegetables with herbs
+   - Light fruit salad (especially good with spicy dishes)
+
+These recommendations are based on culinary principles of balancing flavors, textures, and providing nutritional variety.`;
+    }
+    
+    // Default enhancement for other unhelpful responses
+    return `While the recipe doesn't explicitly address this, here are some helpful suggestions based on culinary principles: 
+
+${response}
+
+Remember that cooking is flexible and you can adapt recipes based on your preferences and available ingredients.`;
+  }
+  
+  return response;
 }; 

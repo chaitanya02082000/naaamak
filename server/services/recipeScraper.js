@@ -91,7 +91,7 @@ function findRecipe(jdjson) {
 
 async function processWithGemini(recipeData) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-04-17" });
     
     const prompt = `Given this recipe data, create a well-structured recipe card with appropriate tags and categories. 
     Recipe data: ${JSON.stringify(recipeData)}
