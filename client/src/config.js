@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
   SCRAPE_RECIPE: `${API_URL}/api/recipes/scrape`,
   SAVE_SCRAPED_RECIPE: (userId) => `${API_URL}/api/recipes/${userId}/save`,
   GET_USER_SCRAPED_RECIPES: (userId) => `${API_URL}/api/recipes/${userId}`,
+  AI_ASK_RECIPE: (recipeId) => `${API_URL}/api/recipes/${recipeId}/ask`,
   
   // Auth endpoints
   REGISTER: `${API_URL}/auth/register`,

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import "../recipeDetail/RecipeDetail.scss";
+import { API_ENDPOINTS } from '../../config';
 
 /**
  * Renders the recipe details component
@@ -136,8 +137,9 @@ const RecipeDetail = ({ recipe: propRecipe }) => {
       
       console.log('Request headers:', headers);
       
+      // Use the AI_ASK_RECIPE endpoint from config
       const response = await axios.post(
-        `/api/recipes/${recipeId}/ask`,
+        API_ENDPOINTS.AI_ASK_RECIPE(recipeId),
         requestData,
         { headers }
       );
