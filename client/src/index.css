@@ -44,9 +44,10 @@ body {
 .app {
   /* Responsive container */
   width: 100%;
-  max-width: 1400px; /* Max width like many modern sites */
+  max-width: 100%; /* Changed from 1400px to 100% for full width */
   margin: 0 auto; /* Center the container */
-  padding: 0 1rem; /* Add some padding on the sides */
+  padding: 0; /* Removed side padding to allow header to expand fully */
+  position: relative; /* Added for proper positioning context */
 }
 
 /* Basic link styling */

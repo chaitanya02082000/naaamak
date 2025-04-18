@@ -5,15 +5,18 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     height: 70px;
-    background-color: rgba(255, 255, 255, 0.85);
+    background-color: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-color);
     z-index: 1000;
     transition: box-shadow 0.3s ease;
+    box-shadow: var(--shadow-sm);
 }
 .logo-wrapper{
     display: flex;
@@ -234,6 +237,7 @@
     .header-wrapper {
         height: 60px;
         padding: 0.5rem 1rem;
+        box-shadow: var(--shadow-sm);
     }
     .logo-wrapper {
         .name {
