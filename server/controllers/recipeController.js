@@ -207,9 +207,16 @@ export const getUserScrapedRecipes = async (req, res) => {
   try {
     const userId = req.params.userId;
     const recipes = await Recipe.find({ userId: userId });
-    res.status(200).json(recipes);
+    res.status(200).json({
+      success: true,
+      data: recipes
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching scraped recipes', error: error.message });
+    res.status(500).json({
+      success: false, 
+      message: 'Error fetching scraped recipes', 
+      error: error.message
+    });
   }
 };
 

@@ -133,36 +133,45 @@ const LoginForm = () => {
 
   // function to handle login form submission
   const login = async (values, onSubmitProps) => {
-    try{
-    const loggedInResponse = await axios.post(
-      API_ENDPOINTS.LOGIN,
-      values,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    const loggedIn = await loggedInResponse.data;
-    onSubmitProps.resetForm();
-    if (loggedIn) {
-      dispatch(
-        setLogin({
-          user: loggedIn.user,
-          token: loggedIn.token,
-        })
+    try {
+      const loggedInResponse = await axios.post(
+        API_ENDPOINTS.LOGIN,
+        values,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
-      navigate("/home");
+      const loggedIn = await loggedInResponse.data;
+      onSubmitProps.resetForm();
+      if (loggedIn) {
+        dispatch(
+          setLogin({
+            user: loggedIn.user,
+            token: loggedIn.token,
+          })
+        );
+        navigate("/home");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      
+      if (error.response && error.response.data) {
+        // Server returned an error response
+        if (error.response.data.msg === "User does not exist. ") {
+          notifyError("User does not exist!");
+        } else {
+          notifyError(error.response.data.msg || "Invalid credentials!");
+        }
+      } else if (error.request) {
+        // Request was made but no response received (network error)
+        notifyError("Network error! Please check your connection or try again later.");
+      } else {
+        // Something else happened while setting up the request
+        notifyError("Login failed. Please try again.");
+      }
     }
-  }
-  catch(error){
-    if(error.response.data.msg === "User does not exist. "){
-      notifyError("User does not exist !");
-    }
-    else{
-      notifyError("Invalid credentials !")
-    }
-  }
   };
 
   // function to handle form submission for both login and register forms

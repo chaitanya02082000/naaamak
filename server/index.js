@@ -44,7 +44,7 @@ app.use(bodyParser.urlencoded({ limit: "30mb", extended: true })); // middleware
 
 // Configure CORS with more options
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://monumental-duckanoo-b875ad.netlify.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
