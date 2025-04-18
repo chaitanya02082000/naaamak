@@ -1,12 +1,93 @@
 @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap');
 
-html, 
-body,
+:root {
+  --bg-color: #f8f9fa; /* Light gray background */
+  --text-color: #212529; /* Dark text */
+  --text-color-light: #5a6268; /* Lighter text (approx 20%) */
+  --text-color-medium: #777c80; /* Medium-light text (approx 30%) */
+  --text-color-lighter: #93979a; /* Lightest text (approx 40%) */
+  --primary-color: #20c997; /* Teal accent color (similar to Whisk) */
+  --primary-color-dark: #1ba882; /* Darker primary color (approx 10%) */
+  --border-color: #dee2e6; /* Light border color */
+  --border-color-dark: #d3d8db; /* Darker border color (approx 5%) */
+  --card-bg: #ffffff; /* White card background */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+html {
+  box-sizing: border-box;
+  scroll-behavior: smooth; /* Add smooth scrolling */
+}
+
+*, *::before, *::after {
+  box-sizing: inherit; /* Inherit box-sizing */
+}
+
+body {
+  margin: 0; /* Ensure no default margin */
+  padding: 0; /* Ensure no default padding */
+  font-family: "Rubik", sans-serif;
+  background-color: var(--bg-color); /* Use variable */
+  color: var(--text-color); /* Use variable */
+  line-height: 1.6; /* Improve readability */
+  font-size: 16px; /* Base font size */
+}
+
 #root,
 .app {
-  font-family: "Rubik", sans-serif;
+  min-height: 100vh; /* Ensure app takes full viewport height */
+  display: flex; /* Use flexbox for potential layout needs */
+  flex-direction: column; /* Stack children vertically */
+}
+
+.app {
+  /* Responsive container */
+  width: 100%;
+  max-width: 1400px; /* Max width like many modern sites */
+  margin: 0 auto; /* Center the container */
+  padding: 0 1rem; /* Add some padding on the sides */
+}
+
+/* Basic link styling */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Basic button styling (can be refined later) */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--primary-color);
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 4px;
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  box-shadow: var(--shadow-sm);
+}
+
+button:hover {
+  background-color: darken(var(--primary-color), 10%);
+  box-shadow: var(--shadow-md);
+}
+
+/* Remove default list styles */
+ul, ol {
+  list-style: none;
+  padding: 0;
   margin: 0;
-  background-color: #0A0A0A;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0; /* Remove default top margin */
+  font-weight: 700; /* Bolder headings by default */
 }
 
 
