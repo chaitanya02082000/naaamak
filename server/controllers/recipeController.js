@@ -1,6 +1,18 @@
 import { scrapeRecipe } from '../services/recipeScraper.js';
 import Recipe from '../models/Recipe.js';
 import mongoose from 'mongoose';
+import User from "../models/User.js";
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+import * as googleAI from '@google/generative-ai';
+import * as dotenv from 'dotenv';
+
+// Load environment variables to ensure they're properly initialized
+dotenv.config();
+
+// Configure Gemini AI Client
+// Ensure you have GEMINI_API_KEY in your .env file
+const genAI = new googleAI.GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export const scrapeRecipeController = async (req, res) => {
   try {
@@ -192,26 +204,172 @@ export const saveScrapedRecipe = async (req, res) => {
 
 export const getUserScrapedRecipes = async (req, res) => {
   try {
-    const { userId } = req.params;
-    
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Valid userId is required'
-      });
+    const userId = req.params.userId;
+    const recipes = await Recipe.find({ userId: userId });
+    res.status(200).json(recipes);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching scraped recipes', error: error.message });
+  }
+};
+
+export const askAboutRecipe = async (req, res) => {
+  console.log('🚀 askAboutRecipe called - Request received:', { 
+    recipeId: req.params.id,
+    hasQuestion: !!req.body.question,
+    hasRecipeData: !!req.body.recipeData,
+    hasToken: !!req.headers.authorization,
+    hasVerifiedUser: !!req.user,
+    userInfo: req.user ? `User ID: ${req.user.id}` : 'No user info'
+  });
+  
+  try {
+    const recipeId = req.params.id;
+    const { question, recipeData } = req.body;
+
+    if (!question) {
+      console.log('❌ Question is missing');
+      return res.status(400).json({ message: "Question is required." });
+    }
+
+    // Variable to hold recipe data, either from DB or request
+    let recipe;
+
+    // Check if recipeId is a valid MongoDB ObjectId
+    const isValidObjectId = recipeId && mongoose.Types.ObjectId.isValid(recipeId);
+    const isNumericId = recipeId && !isNaN(recipeId) && recipeId.toString().length > 0;
+
+    console.log('ID type check:', {
+      recipeId,
+      isValidObjectId,
+      isNumericId,
+      type: typeof recipeId
+    });
+
+    // First try to get recipe from DB if valid ID format
+    if (isValidObjectId) {
+      console.log('📥 Fetching recipe with ID from database:', recipeId);
+      recipe = await Recipe.findById(recipeId);
     }
     
-    const recipes = await Recipe.find({ userId });
+    // If recipe not found in DB but recipeData is provided in request, use that
+    if (!recipe && recipeData) {
+      console.log('📥 Using recipe data provided in request');
+      recipe = recipeData;
+    }
     
-    res.status(200).json({
-      success: true,
-      data: recipes
+    if (!recipe) {
+      console.log('❌ Recipe not found and no recipe data provided');
+      return res.status(404).json({ message: "Recipe not found. Please try again with a different recipe." });
+    }
+    
+    console.log('✅ Recipe data available:', { 
+      id: recipe._id || recipe.id || 'No ID',
+      title: recipe.title || recipe.name || 'Untitled',
+      hasIngredients: !!recipe.ingredients,
+      hasInstructions: !!recipe.instructions
     });
+
+    // Validate that recipe has at least some content
+    if ((!recipe.ingredients || (Array.isArray(recipe.ingredients) && recipe.ingredients.length === 0)) && 
+        (!recipe.extendedIngredients || (Array.isArray(recipe.extendedIngredients) && recipe.extendedIngredients.length === 0))) {
+      console.log('❌ Recipe has no ingredients');
+      return res.status(400).json({ message: "Recipe has no ingredients data." });
+    }
+
+    // For text-only input, use the gemini-2.0-flash model
+    console.log('🤖 Initializing Gemini model (gemini-2.0-flash)...');
+    console.log('GEMINI_API_KEY exists:', !!process.env.GEMINI_API_KEY);
+    console.log('GEMINI_API_KEY first 10 chars:', process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 10) + '...' : 'NOT FOUND');
+
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.0-flash",  // Changed from "gemini-1.5-pro" as requested
+      generationConfig: {
+        temperature: 0.7,
+        topK: 1,
+        topP: 1,
+        maxOutputTokens: 2048,  // Allow longer responses
+      },
+    });
+
+    // Process recipe data to handle different formats and missing fields
+    const getIngredientsList = () => {
+      // Handle Spoonacular API format
+      if (recipe.extendedIngredients && recipe.extendedIngredients.length > 0) {
+        return recipe.extendedIngredients.map(ing => 
+          ing.original || ing.originalString || ing.name || JSON.stringify(ing)
+        ).join(', ');
+      }
+      
+      // Handle standard format
+      if (!recipe.ingredients) return 'No ingredients provided';
+      if (Array.isArray(recipe.ingredients)) {
+        return recipe.ingredients.join(', ');
+      }
+      return String(recipe.ingredients);
+    };
+
+    const getInstructions = () => {
+      // Handle Spoonacular API format
+      if (recipe.analyzedInstructions && recipe.analyzedInstructions.length > 0) {
+        const steps = recipe.analyzedInstructions[0].steps;
+        if (steps && steps.length > 0) {
+          return steps.map(step => `${step.number}. ${step.step}`).join('\n');
+        }
+      }
+      
+      // Handle standard format
+      if (!recipe.instructions) return recipe.description || 'No instructions provided';
+      if (Array.isArray(recipe.instructions)) {
+        if (recipe.instructions.length > 0 && recipe.instructions[0].step) {
+          return recipe.instructions.map(i => i.step).join('\n');
+        }
+        return recipe.instructions.join('\n');
+      }
+      return String(recipe.instructions);
+    };
+
+    console.log('📝 Creating prompt with recipe data and question:', question);
+    const prompt = `
+      Based on the following recipe:
+
+      Title: ${recipe.title || recipe.name || 'Untitled Recipe'}
+      Description: ${recipe.description || recipe.summary || 'No description provided'}
+      Ingredients: ${getIngredientsList()}
+      Instructions: ${getInstructions()}
+      Cooking Time: ${recipe.cookTime || recipe.cookingMinutes || recipe.readyInMinutes || 'N/A'} minutes
+      Servings: ${recipe.servings || recipe.yield || 'N/A'}
+      Prep Time: ${recipe.prepTime || recipe.preparationMinutes || 'N/A'}
+      Total Time: ${recipe.totalTime || recipe.readyInMinutes || 'N/A'}
+
+      Please answer the following question:
+      ${question}
+
+      Only use the information provided in the recipe details above. If the answer cannot be found in the recipe details, please state that clearly. Do not make up information.
+    `;
+
+    console.log('🔄 Calling Gemini API...');
+    try {
+      const result = await model.generateContent(prompt);
+      console.log('✅ Gemini API response received');
+      const response = await result.response;
+      const text = response.text();
+      console.log('📤 Sending answer to client');
+      res.status(200).json({ answer: text });
+    } catch (geminiError) {
+      console.error('❌ Gemini API error:', geminiError);
+      // More detailed error information
+      if (geminiError.message.includes('API key not valid')) {
+        return res.status(401).json({ message: "AI service authentication failed. Please check API key." });
+      } else if (geminiError.message.includes('404 Not Found')) {
+        return res.status(500).json({ message: "AI model not found or not available. Please check model name and configuration." });
+      } else if (geminiError.message.includes('429 Too Many Requests')) {
+        return res.status(429).json({ message: "AI service rate limit reached. Please try again later." });
+      } else {
+        return res.status(500).json({ message: `Error from AI service: ${geminiError.message}` });
+      }
+    }
   } catch (error) {
-    console.error('Error getting user scraped recipes:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to get user scraped recipes'
-    });
+    console.error("❌ General error in askAboutRecipe:", error);
+    res.status(500).json({ message: "Error processing your question with the AI service." });
   }
 }; 

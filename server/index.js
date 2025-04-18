@@ -41,7 +41,18 @@ app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" })); // middle
 app.use(morgan("common")); // middleware for logging HTTP requests and responses
 app.use(bodyParser.json({ limit: "30mb", extended: true })); // middleware for parsing JSON request bodies with specified size limit and extended mode
 app.use(bodyParser.urlencoded({ limit: "30mb", extended: true })); // middleware for parsing URL-encoded request bodies with specified size limit and extended mode
-app.use(cors()); // middleware for enabling CORS with default options
+
+// Configure CORS with more options
+const corsOptions = {
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400 // 24 hours
+};
+
+app.use(cors(corsOptions)); // middleware for enabling CORS with specific options
+
 app.use("/assets", express.static(path.join(__dirname, "public/assets"))); // serve static files from public/assets directory
 
 

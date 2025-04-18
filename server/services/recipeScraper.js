@@ -1,6 +1,10 @@
 import * as cheerio from 'cheerio';
 import tinyduration from 'tinyduration';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import * as dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -87,7 +91,7 @@ function findRecipe(jdjson) {
 
 async function processWithGemini(recipeData) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-001" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     
     const prompt = `Given this recipe data, create a well-structured recipe card with appropriate tags and categories. 
     Recipe data: ${JSON.stringify(recipeData)}

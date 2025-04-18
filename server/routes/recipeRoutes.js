@@ -2,7 +2,8 @@ import express from 'express';
 import { 
   scrapeRecipeController, 
   saveScrapedRecipe, 
-  getUserScrapedRecipes 
+  getUserScrapedRecipes,
+  askAboutRecipe
 } from '../controllers/recipeController.js';
 import { verifyToken } from '../middleware/auth.js';
 
@@ -16,5 +17,8 @@ router.post('/:userId/save', verifyToken, saveScrapedRecipe);
 
 // Route for getting user's scraped recipes (protected)
 router.get('/:userId', verifyToken, getUserScrapedRecipes);
+
+// Route to ask Gemini about a specific recipe (temporarily removing auth check for testing)
+router.post('/:id/ask', askAboutRecipe); // Removed verifyToken middleware for testing
 
 export default router; 

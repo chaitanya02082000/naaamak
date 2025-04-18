@@ -6,20 +6,35 @@ import jwt from "jsonwebtoken";
 
 export const verifyToken = async (req, res, next) => {
   try {
+    console.log('🔒 Auth Middleware - Checking token');
+    console.log('Request path:', req.originalUrl);
     let token = req.header("Authorization");
 
     if (!token) {
-      return res.status(403).send("Access Denied");
+      console.log('❌ No Authorization header found');
+      return res.status(403).json({ message: "Access Denied - No token provided" });
     }
+
+    console.log('Token format:', token.substring(0, 15) + '...');
 
     if (token.startsWith("Bearer ")) {
       token = token.slice(7, token.length).trimLeft();
+      console.log('Bearer token extracted');
+    } else {
+      console.log('⚠️ Token doesn\'t start with "Bearer "');
     }
 
-    const verified = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = verified;
-    next();
+    try {
+      const verified = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('✅ Token verified successfully for user:', verified.id);
+      req.user = verified;
+      next();
+    } catch (verifyError) {
+      console.log('❌ Token verification failed:', verifyError.message);
+      return res.status(401).json({ message: "Invalid or expired token" });
+    }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('❌ Auth middleware error:', err);
+    res.status(500).json({ message: "Authentication error", error: err.message });
   }
 };
